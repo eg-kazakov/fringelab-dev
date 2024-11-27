@@ -1,0 +1,45 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+env/
+venv/
+ENV/
+*.egg-info/
+*.egg
+dist/
+build/
+pip-wheel-metadata/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints
+
+# Testing / Coverage
+htmlcov/
+.tox/
+.coverage
+.cache
+.nox/
+
+# Virtual environment
+.venv/
+
+# IDEs
+.idea/
+.vscode/
+*.sublime-workspace
+*.sublime-project
+
+# Logs and local environment files
+*.log
+*.env
+*.env.*
+
+# MacOS specific
+.DS_Store
