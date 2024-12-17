@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Interactive Ellipse Playground</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+    }
+    canvas {
+      border: 1px solid black;
+    }
+    .controls {
+      margin-top: 10px;
+    }
+    .coordinates {
+      margin-top: 10px;
+    }
+    .selected-point {
+      margin-top: 20px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+<h1>Interactive Ellipse Playground</h1>
+<p>Drag the foci points and adjust the radius using the slider to see the changes in the ellipse. Click on the ellipse to select a point, and it will remain highlighted during modifications.</p>
+
+<div class="controls">
+  <label for="radius">Major Axis (2a): </label>
+  <input type="range" id="radius" name="radius" min="50" max="300" value="150" step="1">
+  <span id="radiusValue">150</span>
+</div>
+
+<div class="coordinates">
+  <h3>Foci Coordinates:</h3>
+  <label for="foci1XInput">Focus 1 X: </label>
+  <input type="number" id="foci1XInput" value="200">
+  <label for="foci1YInput">Focus 1 Y: </label>
+  <input type="number" id="foci1YInput" value="200">
+  <br>
+  <label for="foci2XInput">Focus 2 X: </label>
+  <input type="number" id="foci2XInput" value="400">
+  <label for="foci2YInput">Focus 2 Y: </label>
+  <input type="number" id="foci2YInput" value="200">
+</div>
+
+<div class="selected-point">
+  <h3>Selected Point Coordinates:</h3>
+  <p id="selectedPointCoordinates">X: N/A, Y: N/A</p>
+</div>
+
+<script>
+  let f1, f2; // Foci points
+  let a = 150; // Semi-major axis (2a / 2)
+  let fociRadius = 10; // Foci radius
+  let selectedPoint = null; // Variable to store the selected point on the ellipse
+
+  function setup() {
+    createCanvas(600, 400);
+    f1 = createVector(200, 200); // First focus
+    f2 = createVector(400, 200); // Second focus
+
+    // Setup the radius slider
+    let radiusSlider = select('#radius');
+    radiusSlider.input(() => {
+      a = radiusSlider.value() / 2; // Convert to semi-major axis (a)
+      select('#radiusValue').html(radiusSlider.value());
+    });
+
+    // Update foci based on input fields
+    select('#foci1XInput').input(updateFociFromInputs);
+    select('#foci1YInput').input(updateFociFromInputs);
+    select('#foci2XInput').input(updateFociFromInputs);
+    select('#foci2YInput').input(updateFociFromInputs);
+  }
+
+  function updateFociFromInputs() {
+    // Update foci positions based on manual input
+    f1.x = parseFloat(select('#foci1XInput').value());
+    f1.y = parseFloat(select('#foci1YInput').value());
+    f2.x = parseFloat(select('#foci2XInput').value());
+    f2.y = parseFloat(select('#foci2YInput').value());
+  }
+
+  function draw() {
+    background(255);
+
+    // Draw grid (net)
+    drawGrid();
+
+    // Compute the distance between the foci and the semi-axes
+    let d = dist(f1.x, f1.y, f2.x, f2.y);
+    let c = d / 2; // Focal semi-axis
+    let b = sqrt(a * a - c * c); // Minor semi-axis
+
+    // Center of the ellipse (midpoint between the foci)
+    let h = (f1.x + f2.x) / 2;
+    let k = (f1.y + f2.y) / 2;
+
+    // Angle of rotation for the ellipse (angle between the foci)
+    let angle = atan2(f2.y - f1.y, f2.x - f1.x); // Angle between the foci
+
+    // Drawing the ellipse using parametric equations
+    beginShape();
+    for (let theta = 0; theta < TWO_PI; theta += 0.01) {
+      // Parametric equation for the ellipse before rotation
+      let x = a * cos(theta);
+      let y = b * sin(theta);
+
+      // Rotate the point (x, y) around the center of the ellipse by the angle 'angle'
+      let xRot = h + x * cos(angle) - y * sin(angle);
+      let yRot = k + x * sin(angle) + y * cos(angle);
+
+      // Highlight the selected point in red if it's close to the current point on the ellipse
+      if (selectedPoint && dist(xRot, yRot, selectedPoint.x, selectedPoint.y) < 10) {
+        fill(255, 0, 0);
+        ellipse(xRot, yRot, 10, 10); // Draw the selected point
+      } else {
+        vertex(xRot, yRot); // Otherwise, draw the ellipse normally
+      }
+    }
+    endShape(CLOSE);
+
+    // Draw the foci
+    fill(173, 216, 230);
+    ellipse(f1.x, f1.y, fociRadius, fociRadius);
+    ellipse(f2.x, f2.y, fociRadius, fociRadius);
+
+    // Draw the line connecting the foci
+    stroke(0);
+    line(f1.x, f1.y, f2.x, f2.y);
+  }
+
+  // Function to draw the grid (net)
+  function drawGrid() {
+    stroke(220);
+    strokeWeight(1);
+    for (let x = 0; x < width; x += 20) {
+      line(x, 0, x, height);
+    }
+    for (let y = 0; y < height; y += 20) {
+      line(0, y, width, y);
+    }
+  }
+
+  // Mouse interaction to move foci
+  function mousePressed() {
+    if (dist(mouseX, mouseY, f1.x, f1.y) < fociRadius / 2) {
+      f1.dragging = true;
+    } else if (dist(mouseX, mouseY, f2.x, f2.y) < fociRadius / 2) {
+      f2.dragging = true;
+    } else {
+      // Check if the mouse is near any point on the ellipse
+      let d = dist(mouseX, mouseY, f1.x, f1.y);
+      let c = dist(f1.x, f1.y, f2.x, f2.y) / 2;
+      let b = sqrt(a * a - c * c);
+      for (let theta = 0; theta < TWO_PI; theta += 0.01) {
+        let x = a * cos(theta);
+        let y = b * sin(theta);
+        let xRot = (f1.x + f2.x) / 2 + x * cos(atan2(f2.y - f1.y, f2.x - f1.x)) - y * sin(atan2(f2.y - f1.y, f2.x - f1.x));
+        let yRot = (f1.y + f2.y) / 2 + x * sin(atan2(f2.y - f1.y, f2.x - f1.x)) + y * cos(atan2(f2.y - f1.y, f2.x - f1.x));
+
+        if (dist(mouseX, mouseY, xRot, yRot) < 10) {
+          selectedPoint = createVector(xRot, yRot); // Select the point on the ellipse
+          updateSelectedPointCoordinates(); // Update the coordinates display
+          break;
+        }
+      }
+    }
+  }
+
+  function mouseReleased() {
+    f1.dragging = false;
+    f2.dragging = false;
+  }
+
+  function mouseDragged() {
+    if (f1.dragging) {
+      f1.x = mouseX;
+      f1.y = mouseY;
+      select('#foci1XInput').value(f1.x);
+      select('#foci1YInput').value(f1.y);
+    } else if (f2.dragging) {
+      f2.x = mouseX;
+      f2.y = mouseY;
+      select('#foci2XInput').value(f2.x);
+      select('#foci2YInput').value(f2.y);
+    }
+  }
+
+  // Function to update the coordinates display of the selected point
+  function updateSelectedPointCoordinates() {
+    if (selectedPoint) {
+      select('#selectedPointCoordinates').html(`X: ${selectedPoint.x.toFixed(2)}, Y: ${selectedPoint.y.toFixed(2)}`);
+    }
+  }
+</script>
+</body>
+</html>

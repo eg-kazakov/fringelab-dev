@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Draw 3D Cone with Elliptical Slice</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+    }
+    canvas {
+      border: 1px solid black;
+    }
+  </style>
+</head>
+<body>
+<h1>3D Cone with Elliptical Slice Visualization</h1>
+
+<script>
+  function setup() {
+    createCanvas(windowWidth, windowHeight, WEBGL);  // Create a 3D canvas
+  }
+
+  function draw() {
+    background(240);
+
+    // Move the cone slightly above the center of the canvas
+    translate(0, 0, -200);
+
+    // Draw the full cone with a radius of 100 and height of 200
+    fill(200, 100, 100);  // Set color to red
+    cone(100, -200);  // radius of base, height of cone
+
+    // Draw an elliptical slice at a specific height
+    let sliceHeight = 100;  // Height at which the slice occurs
+    let sliceRadiusX = map(sliceHeight, 0, 200, 100, 0); // Horizontal radius varies with height
+    let sliceRadiusY = sliceRadiusX * 0.6; // Vertical radius (scale to create an ellipse)
+
+    // Draw the ellipse at the slice height
+    fill(100, 200, 255, 150);  // Set color for the ellipse slice (light blue)
+    push();
+    translate(0, 0, sliceHeight);  // Move to the slice height
+    rotateX(HALF_PI);  // Rotate to make the ellipse visible flat
+    ellipse(0, 0, sliceRadiusX * 2, sliceRadiusY * 2);  // Draw the ellipse
+    pop();
+  }
+</script>
+</body>
+</html>

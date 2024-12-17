@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ellipse Transformation</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+    }
+    canvas {
+      border: 1px solid black;
+      display: block;
+      margin-bottom: 20px;
+    }
+    .controls {
+      margin-top: 10px;
+    }
+    .coordinates {
+      margin-top: 10px;
+    }
+    .reset-btn {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+<h1>Ellipse Transformation Demo</h1>
+<p>Interact with the controls to modify the ellipse transformation.</p>
+
+<div class="controls">
+  <label for="radiusX">Semi-Major Axis (a): </label>
+  <input type="range" id="radiusX" min="50" max="300" value="150" step="1">
+  <span id="radiusXValue">150</span>
+  <br>
+  <label for="radiusY">Semi-Minor Axis (b): </label>
+  <input type="range" id="radiusY" min="50" max="300" value="100" step="1">
+  <span id="radiusYValue">100</span>
+  <br>
+  <label for="rotation">Rotation Angle (deg): </label>
+  <input type="range" id="rotation" min="0" max="360" value="0" step="1">
+  <span id="rotationValue">0</span>°
+  <br>
+  <label for="scaleX">Scale X: </label>
+  <input type="range" id="scaleX" min="0.1" max="2" value="1" step="0.1">
+  <span id="scaleXValue">1</span>
+  <br>
+  <label for="scaleY">Scale Y: </label>
+  <input type="range" id="scaleY" min="0.1" max="2" value="1" step="0.1">
+  <span id="scaleYValue">1</span>
+</div>
+
+<div class="coordinates">
+  <p>Original Point Coordinates: (<span id="originalX">0</span>, <span id="originalY">0</span>)</p>
+  <p>Transformed Point Coordinates: (<span id="transformedX">0</span>, <span id="transformedY">0</span>)</p>
+  <p>Angle from Origin to Transformed Point: <span id="angleFromOrigin">0</span>°</p>
+  <p>Foci 1 Coordinates: (<span id="foci1X">0</span>, <span id="foci1Y">0</span>)</p>
+  <p>Foci 2 Coordinates: (<span id="foci2X">0</span>, <span id="foci2Y">0</span>)</p>
+</div>
+
+<button class="reset-btn" onclick="resetTrace()">Reset Trace</button>
+
+<script>
+  let a = 150; // Semi-major axis
+  let b = 100; // Semi-minor axis
+  let angle = 0; // Rotation angle in radians
+  let scaleX = 1; // Scaling factor for X
+  let scaleY = 1; // Scaling factor for Y
+  let theta = Math.PI / 4; // Example angle on ellipse
+
+  let tracePoints = []; // Store the points for tracing the motion of the point
+  let originalX, originalY; // Coordinates of the original point on the ellipse
+  let transformedPoint; // Transformed point after transformations
+  let foci1, foci2; // Foci coordinates
+
+  function setup() {
+    createCanvas(600, 400);
+    let radiusXSlider = select('#radiusX');
+    let radiusYSlider = select('#radiusY');
+    let rotationSlider = select('#rotation');
+    let scaleXSlider = select('#scaleX');
+    let scaleYSlider = select('#scaleY');
+
+    radiusXSlider.input(() => {
+      a = radiusXSlider.value();
+      select('#radiusXValue').html(a);
+    });
+
+    radiusYSlider.input(() => {
+      b = radiusYSlider.value();
+      select('#radiusYValue').html(b);
+    });
+
+    rotationSlider.input(() => {
+      angle = radians(rotationSlider.value());
+      select('#rotationValue').html(rotationSlider.value());
+    });
+
+    scaleXSlider.input(() => {
+      scaleX = scaleXSlider.value();
+      select('#scaleXValue').html(scaleX);
+    });
+
+    scaleYSlider.input(() => {
+      scaleY = scaleYSlider.value();
+      select('#scaleYValue').html(scaleY);
+    });
+  }
+
+  function draw() {
+    background(255);
+
+    // Draw the ellipse with transformation
+    drawEllipseWithTransformation(a, b, angle, scaleX, scaleY);
+
+    // Original point on the ellipse (for demonstration)
+    originalX = a * Math.cos(theta);
+    originalY = b * Math.sin(theta);
+    select('#originalX').html(originalX.toFixed(2));
+    select('#originalY').html(originalY.toFixed(2));
+
+    // Transformed point after rotation and scaling
+    transformedPoint = transformPointOnEllipse(theta, a, b, angle, scaleX, scaleY);
+    select('#transformedX').html(transformedPoint.x.toFixed(2));
+    select('#transformedY').html(transformedPoint.y.toFixed(2));
+
+    // Draw the red point on the original ellipse
+    fill(255, 0, 0);
+    ellipse(originalX + width / 2, originalY + height / 2, 10, 10);
+
+    // Trace the point's transformation
+    tracePoints.push(transformedPoint);
+    stroke(0, 0, 255);
+    for (let i = 1; i < tracePoints.length; i++) {
+      line(tracePoints[i - 1].x + width / 2, tracePoints[i - 1].y + height / 2, tracePoints[i].x + width / 2, tracePoints[i].y + height / 2);
+    }
+
+    // Draw the transformed red point
+    fill(0, 255, 0);  // Green for the transformed point
+    ellipse(transformedPoint.x + width / 2, transformedPoint.y + height / 2, 10, 10);
+
+    // Calculate the angle from the origin (center of canvas) to the transformed point
+    let angleFromOrigin = Math.atan2(transformedPoint.y, transformedPoint.x) * 180 / Math.PI; // Convert to degrees
+    select('#angleFromOrigin').html(angleFromOrigin.toFixed(2));
+
+    // Draw a dotted line from the center (origin) to the transformed point
+    stroke(0, 0, 0);  // Black for the dotted line
+    strokeWeight(2);
+    drawingContext.setLineDash([5, 5]);  // Dotted line with 5px dashes and 5px gaps
+    line(width / 2, height / 2, transformedPoint.x + width / 2, transformedPoint.y + height / 2);
+    drawingContext.setLineDash([]);  // Reset line dash for other drawings
+
+    // Calculate the foci (at +/-c on the major axis)
+    let c = Math.sqrt(a * a - b * b); // Distance from center to each focus
+    foci1 = transformPointOnEllipse(0, c, 0, angle, scaleX, scaleY); // Focus 1 at (c, 0)
+    foci2 = transformPointOnEllipse(0, -c, 0, angle, scaleX, scaleY); // Focus 2 at (-c, 0)
+
+    // Display the foci coordinates
+    select('#foci1X').html(foci1.x.toFixed(2));
+    select('#foci1Y').html(foci1.y.toFixed(2));
+    select('#foci2X').html(foci2.x.toFixed(2));
+    select('#foci2Y').html(foci2.y.toFixed(2));
+
+    // Draw the foci in blue
+    fill(0, 0, 255); // Blue for foci
+    ellipse(foci1.x + width / 2, foci1.y + height / 2, 10, 10);
+    ellipse(foci2.x + width / 2, foci2.y + height / 2, 10, 10);
+  }
+
+  // Function to transform a point on the ellipse
+  function transformPointOnEllipse(theta, a, b, angle, scaleX, scaleY) {
+    let x = a * Math.cos(theta);
+    let y = b * Math.sin(theta);
+
+    // Rotate the point
+    let xRot = x * Math.cos(angle) - y * Math.sin(angle);
+    let yRot = x * Math.sin(angle) + y * Math.cos(angle);
+
+    // Scale the point
+    let xTransformed = xRot * scaleX;
+    let yTransformed = yRot * scaleY;
+
+    return { x: xTransformed, y: yTransformed };
+  }
+
+  // Function to draw the ellipse with transformations
+  function drawEllipseWithTransformation(a, b, angle, scaleX, scaleY) {
+    beginShape();
+    for (let theta = 0; theta <= TWO_PI; theta += 0.01) {
+      let x = a * Math.cos(theta);
+      let y = b * Math.sin(theta);
+
+      // Apply the transformations (rotation and scaling)
+      let xRot = x * Math.cos(angle) - y * Math.sin(angle);
+      let yRot = x * Math.sin(angle) + y * Math.cos(angle);
+
+      // Scale the point
+      let xTransformed = xRot * scaleX;
+      let yTransformed = yRot * scaleY;
+
+      // Draw the ellipse in green
+      fill(0, 255, 0); // Green
+      noStroke();
+      ellipse(xTransformed + width / 2, yTransformed + height / 2, 2, 2); // Draw as small points for ellipse outline
+    }
+    endShape(CLOSE);
+  }
+
+  // Function to reset the trace
+  function resetTrace() {
+    tracePoints = []; // Clear the trace
+  }
+</script>
+
+</body>
+</html>
