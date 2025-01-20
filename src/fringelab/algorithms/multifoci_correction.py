@@ -4,6 +4,7 @@ from scipy.optimize import minimize, LinearConstraint
 from scipy.spatial import ConvexHull
 
 from .base_class_correction_algorithm import CorrectionAlgorithm
+from .. import FringeSet
 
 
 class MultiFociCorrectionAlgorithm(CorrectionAlgorithm):
@@ -15,6 +16,12 @@ class MultiFociCorrectionAlgorithm(CorrectionAlgorithm):
         self.max_iterations = max_iterations
         self.tolerance = tolerance
         self.debug = debug
+
+    def recover_phase(self, I1, I2, I3):
+        # Placeholder implementation
+        fringe_set = FringeSet.create_set_from_fringes(I1, I2, I3)
+        trajectory = fringe_set.get_trajectory()
+        return self.recover_phase(trajectory)
 
     def recover_phase(self, points):
 
