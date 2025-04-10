@@ -24,7 +24,6 @@ class MultiFociCorrectionAlgorithm(CorrectionAlgorithm):
         return self.recover_phase(trajectory)
 
     def recover_phase(self, points):
-
         # Step 1: Initial focus and radius
         z1, R = self._step1_init(points)
         print("init")

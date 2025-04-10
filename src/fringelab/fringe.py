@@ -5,11 +5,12 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import Normalize
 
 class Fringe:
-    def __init__(self, size, A_func, B_func, Fi_func):
+    def __init__(self, size, A_func, B_func, Fi_func, description = None):
         self.size = size
         self.A_func = A_func
         self.B_func = B_func
         self.Fi_func = Fi_func
+        self.description = description
 
         # Initialize empty matrices for intensity and intermediate values
         self.intensity = None
@@ -22,6 +23,14 @@ class Fringe:
     def generate(self):
         """Generates the intensity and intermediate matrices."""
         size = self.size
+        # x = np.linspace(-1, 1, size)
+        # y = np.linspace(-1, 1, size)
+        # X, Y = np.meshgrid(x, y)
+        #
+        # A = self.A_func(X, Y)
+        # B = self.B_func(X, Y)
+        # Fi = self.Fi_func(X, Y)
+
         A = np.empty([size, size])
         B = np.empty([size, size])
         Fi = np.empty([size, size])

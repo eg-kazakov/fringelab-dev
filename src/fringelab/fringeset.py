@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import plotly.graph_objects as go
+from fractions import Fraction
 from .fringe import Fringe
 
 
@@ -20,13 +20,20 @@ class FringeSet:
         :param count: The number of fringes to generate.
         :return: A new FringeSet object.
         """
+        def format_step_description(step):
+            if step == 0.0:
+                return '0'
+            fraction = Fraction(step / np.pi).limit_denominator()
+            return f"{fraction.numerator}/{fraction.denominator} * π"
+
         fringes = []
         for i in range(count):
             new_fringe = Fringe(
                 size=base_fringe.size,
                 A_func=base_fringe.A_func,
                 B_func=base_fringe.B_func,
-                Fi_func=lambda x, y, phase_shift=i * step: base_fringe.Fi_func(x, y) + phase_shift
+                Fi_func=lambda x, y, phase_shift=i * step: base_fringe.Fi_func(x, y) + phase_shift,
+                description=format_step_description(i * step)
             )
             new_fringe.generate()
             fringes.append(new_fringe)
@@ -59,21 +66,24 @@ class FringeSet:
 
         return Trajectory(trajectory_points)
 
-    def plot(self):
+    def plot(self, columns=None):
         num_images = len(self.fringes)
-        columns = 2 if num_images%2 else 3
+        if not columns:
+            columns = 2 if num_images%2 else 3
         num_cols = min(num_images, columns)
-        num_rows = (num_images + 1) // num_cols
+        num_rows = (num_images + num_cols - 1) // num_cols  # Fix row calculation
 
-        fig, axs = plt.subplots(num_rows, num_cols)
+        fig, axs = plt.subplots(num_rows, num_cols, figsize=(num_cols * 4, num_rows * 4))  # Define vertical size
 
-        for i, image in enumerate([f.intensity for f in self.fringes]):
+        #axs = np.atleast_2d(axs)  # Ensure axs is always a 2D array
+
+        for i, (image, desc) in enumerate([(f.intensity, f.description) for f in self.fringes]):
             row = i // num_cols
             col = i % num_cols
             ax = axs[row, col] if num_rows > 1 else axs[col]
 
             ax.imshow(image, cmap='Spectral')
-            ax.set_title(i)
+            ax.set_title(desc)
             fig.colorbar(ax.get_images()[0], ax=ax)
 
         return fig.tight_layout()
@@ -122,6 +132,7 @@ class Trajectory:
             ax.set_xlabel("I1")
             ax.set_ylabel("I2")
             ax.set_zlabel("I3")
+            return fig.tight_layout()
         else:
             raise ValueError("Trajectory visualization supports only 2D or 3D data.")
         return plt
